@@ -6,7 +6,7 @@
   <meta name="twitter:card" content="photo">
   <meta name="twitter:site" content="@cabbibo">
   <meta name="twitter:creator" content="@cabbibo">
-  <meta name="twitter:url" content="http://cabbi.bo">
+  <meta name="twitter:url" content="http://cabbi.bo/ShinyText">
   <meta name="twitter:title" content="Long Live Synesthesia">
   <meta name="twitter:description" content="Long Live Synesthesia">
   <meta name="twitter:creator" content="@cabbibo">
@@ -122,11 +122,6 @@
 <body>
 
 
-  <div id="description">
-    <a href="http://cabbi.bo/">cabbi.bo</a>
-  </div>
-
-  
 <script src = "lib/underscore.js"           ></script>
 <script src = "lib/three.min.js"            ></script>
 <script src = "lib/jquery.min.js"           ></script>
@@ -216,7 +211,10 @@
   var normal = THREE.ImageUtils.loadTexture('img/bark.jpg');
   normal.wrapS = THREE.RepeatWrapping;
   normal.wrapT = THREE.RepeatWrapping;
-  
+
+  var twitterTexture = THREE.ImageUtils.loadTexture('img/icons/twitter_2.png');
+  var cabbiboTexture = THREE.ImageUtils.loadTexture('img/icons/cabbibo_2.png');
+  var facebookTexture = THREE.ImageUtils.loadTexture('img/icons/facebook_2.png');
   var modifier = new THREE.SubdivisionModifier( 2 );
   var loadedMeshes = {}
  
@@ -305,6 +303,92 @@
     slider.scene.position.y = -150;
 
     scene.add( slider.scene );
+
+
+
+
+    var geo = new THREE.PlaneBufferGeometry( 80 , 80 );
+    var mat = new THREE.MeshBasicMaterial({
+      map: twitterTexture,
+      transparent:true,
+      depthWrite:false,
+      blending: THREE.AdditiveBlending,
+      opacity: .5
+    });
+    var twitter = new THREE.Mesh( geo , mat );
+    twitter.position.x  = 420;
+    twitter.position.y = -250;
+    scene.add( twitter );
+
+    twitter.link = "http://twitter.com/share?text=THATS%20SOME%20SHINY%20TEXT%20(%20by%20@cabbibo%20)%20:%20&url=http://cabbi.bo/ShinyText"
+    twitter.hoverOver = function(){
+      this.material.opacity = 1.;
+    }.bind( twitter );
+
+    twitter.hoverOut = function(){
+      this.material.opacity = .5;
+    }.bind( twitter );
+
+    twitter.select = function(){
+      window.location = this.link
+    }.bind( twitter );
+    objectControls.add( twitter );
+
+
+    var mat = new THREE.MeshBasicMaterial({
+      map: facebookTexture,
+      transparent:true,
+      depthWrite:false,
+      blending: THREE.AdditiveBlending,
+      opacity: .5
+    });
+    var twitter = new THREE.Mesh( geo , mat );
+    twitter.position.x  = 500;
+    twitter.position.y = -250;
+    scene.add( twitter );
+    twitter.link = 'http://www.facebook.com/sharer.php?u=http://cabbi.bo/ShinyText'
+    twitter.hoverOver = function(){
+      this.material.opacity = 1.;
+    }.bind( twitter );
+
+    twitter.hoverOut = function(){
+      this.material.opacity = .5;
+
+    }.bind( twitter );
+
+    twitter.select = function(){
+      window.location = this.link
+    }.bind( twitter );
+    objectControls.add( twitter );
+
+
+    var mat = new THREE.MeshBasicMaterial({
+      map: cabbiboTexture,
+      transparent:true,
+      depthWrite:false,
+      blending: THREE.AdditiveBlending,
+      opacity: .5
+    });
+    var twitter = new THREE.Mesh( geo , mat );
+    twitter.position.x  = 580;
+    twitter.position.y = -250;
+    scene.add( twitter );
+
+    twitter.link = 'http://cabbi.bo'
+    twitter.hoverOver = function(){
+      this.material.opacity = 1.;
+    }.bind( twitter );
+
+    twitter.hoverOut = function(){
+      this.material.opacity = .5;
+    }.bind( twitter );
+
+    twitter.select = function(){
+      window.location = this.link
+    }.bind( twitter );
+
+    objectControls.add( twitter );
+
 
 
     var geo = new THREE.CubeGeometry( 30 , 30 , 30 );
