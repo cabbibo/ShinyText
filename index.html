@@ -1,0 +1,586 @@
+<html>
+
+<head>
+
+
+  <meta name="twitter:card" content="photo">
+  <meta name="twitter:site" content="@cabbibo">
+  <meta name="twitter:creator" content="@cabbibo">
+  <meta name="twitter:url" content="http://cabbi.bo">
+  <meta name="twitter:title" content="Long Live Synesthesia">
+  <meta name="twitter:description" content="Long Live Synesthesia">
+  <meta name="twitter:creator" content="@cabbibo">
+  <meta name="twitter:image" content="http://cabbi.bo/image.png">
+  <meta name="twitter:image:width" content="1440">
+  <meta name="twitter:image:height" content="900">
+  <meta name="twitter:domain" content="cabbi.bo">
+  <meta itemprop="name" content="Cabbi.bo">
+  <meta itemprop="description" content="Long Live Synesthesia">
+  <meta itemprop="image" src="http://cabbi.bo/image.png">
+  <meta property="og:title" content="Cabbi.bo">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="http://cabbi.bo/image.png"/>
+  <meta property="og:site_name" content="Cabbi.bo">
+  <meta property="og:description" content="Long Live Synesthesia">
+
+  <style>
+
+    @font-face {
+      font-family: "GeoSans";
+      src: url("lib/GeosansLight.ttf");
+    }
+    html{ color:#fff; background:#000; font-family:"GeoSans"; font-size:20px; overflow:hidden }
+
+    #container{
+      width      : 100%;
+      height     : 100%;
+      position   : absolute;
+      top        : 0px;
+      left       : 0px;
+      background : #000;
+    }
+
+    #stats{
+      position  : absolute;
+      bottom    : -35px;
+
+      left      : 0px;
+      z-index   : 999;
+      opacity: .1;
+    }
+
+    a{
+      color: #fff;
+      position: absolute;
+      z-index: 999;
+    }
+
+    #loading{
+
+      width:100%;
+      text-align:center;
+      padding-top:100px;
+      font-size:25px;
+
+    }
+    
+    a{
+      color: #fff;
+      position: absolute;
+      z-index: 999;
+      bottom:40px;
+      //left:50%;
+      width:100%;
+      //margin-left:-50px;
+      text-align:center;
+      text-decoration:none;
+      //underline:none;
+      opacity:.5;
+      font-size: 50px;
+    }
+
+    a:hover{
+
+      text-decoration:underline;
+      opacity:1;
+
+    }
+
+    a img{
+
+      width:100px;
+
+    }
+
+    h1{
+      background: #000;
+      color: #fff;
+      margin: 0px;
+      padding: 5px;
+      font-size:25px;
+      border-bottom:1px solid white;
+    }
+
+    h1:hover{
+
+      background:#777;
+
+    }
+
+    .active{
+      background:#7ca;
+    }
+
+    .close-button{
+  
+      display:none;
+
+    }
+
+    </style>
+</head>
+<body>
+
+
+  <div id="description">
+    <a href="http://cabbi.bo/">cabbi.bo</a>
+  </div>
+
+  
+<script src = "lib/underscore.js"           ></script>
+<script src = "lib/three.min.js"            ></script>
+<script src = "lib/jquery.min.js"           ></script>
+<script src = "lib/stats.min.js"            ></script>
+<script src = "lib/ShaderLoader.js"         ></script>
+<script src = "lib/PhysicsRenderer.js"      ></script>
+<script src = "lib/ParticleUtils.js"        ></script>
+<script src = "lib/dat.gui.min.js"          ></script>
+<script src = "lib/Loader.js"               ></script>
+<script src = "lib/TextCreator.js"               ></script>
+<script src = "lib/SubdivisionModifier.js"  ></script>
+
+<script src = "lib/ObjectControls.js"       ></script>
+
+<script src="fonts/helvetiker_bold.typeface.js"></script>
+<script src="fonts/helvetiker_regular.typeface.js"></script>
+
+<script src="fonts/optimer_bold.typeface.js"></script>
+<script src="fonts/optimer_regular.typeface.js"></script>
+
+
+<script src = "GEM.js"                      ></script>
+
+
+<script src = "Arrangements.js"             ></script>
+
+
+<script src = "Slider.js"                     ></script>
+<script src = "Text.js"                     ></script>
+<script src = "RepelerMesh.js"              ></script>
+
+<script>
+
+  var numOfRepelers = 50;
+  var container , camera, scene, renderer , stats;
+
+  var gem , gui;
+
+  var tv1 = new THREE.Vector3();
+  var tv2 = new THREE.Vector3();
+  var repelerMeshes = [];
+  var repelersHidden = true;
+
+  var REPELERS = [];
+  var cursorPosition = new THREE.Vector3();
+
+
+
+  // TODO: make into loader
+  var loaded = 0;
+  var neededToLoad = 1;
+
+
+  var loader = new Loader();
+
+  var clock = new THREE.Clock();
+
+
+  var shaders = new ShaderLoader('shaders');
+
+  shaders.load( 'ss-fire' , 'fire' , 'simulation' );
+  shaders.load( 'vs-sem' , 'sem' , 'vertex' );
+  shaders.load( 'fs-sem' , 'sem' , 'fragment' );
+
+  shaders.load( 'vs-matcap' , 'matcap' , 'vertex' );
+  shaders.load( 'fs-matcap' , 'matcap' , 'fragment' );
+
+  shaders.load( 'vs-knob' , 'knob' , 'vertex' );
+  shaders.load( 'fs-knob' , 'knob' , 'fragment' );
+
+  shaders.shaderSetLoaded = function(){
+   onLoad();
+  }
+
+  //Skin_1
+  //Shiny_Fire_1c
+
+  // for text
+  var sem2 = THREE.ImageUtils.loadTexture('img/matcap/test_gold.jpg');
+  var sem = THREE.ImageUtils.loadTexture('img/matcap/red_bob.jpg');
+
+  // for bugs Jade_Red2b
+  //var matcap2 = THREE.ImageUtils.loadTexture('img/matcap/Copper_1.png');
+  var matcap = THREE.ImageUtils.loadTexture('img/matcap/Copper_1.png');
+  var matcap2 = THREE.ImageUtils.loadTexture('img/matcap/Copper_Blue.png');
+
+  var normal = THREE.ImageUtils.loadTexture('img/bark.jpg');
+  normal.wrapS = THREE.RepeatWrapping;
+  normal.wrapT = THREE.RepeatWrapping;
+  
+  var modifier = new THREE.SubdivisionModifier( 2 );
+  var loadedMeshes = {}
+ 
+
+  var G_UNIFORMS = {
+
+    dT      : { type:"f" , value:0                            },
+    time    : { type:"f" , value:0                            },
+
+    reflectionPower : { type:"f", value:2 , constraints:[0.1,3]},
+    repulsionPower:  { type:"f" , value:  100. , constraints:[-300  , 1000 ] },
+    repulsionRadius: { type:"f" , value: 100. , constraints:[ 0  , 1000] },
+    dampening: { type:"f" , value: .95 , constraints:[ .8  , .99] },
+
+    t_normal:  { type:"t" , value: normal },
+    t_sem:  { type:"t" , value: sem },
+    t_sem2:  { type:"t" , value: sem2 },
+    lightPos:{type:"v3", value:cursorPosition},
+
+ 
+  }
+
+ 
+
+ function init(){
+
+
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 
+      50 ,
+      window.innerWidth / window.innerHeight,
+      10,
+      10000
+    );
+
+    // placing our camera position so it can see everything
+    camera.position.z = 1000 ;
+    camera.lookAt( new THREE.Vector3() );
+
+    // Getting the container in the right location
+    container     = document.createElement( 'div' );
+    container.id  = 'container';
+    
+    document.body.appendChild( container );
+
+    // Getting the stats in the right position
+    stats = new Stats();
+    stats.domElement.id = 'stats';
+    document.body.appendChild( stats.domElement );
+
+
+    // Setting up our Renderer
+    renderer = new THREE.WebGLRenderer();
+
+    //renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setPixelRatio( 2 );
+    container.appendChild( renderer.domElement );
+    renderer.domElement.style.background="#000";
+
+    onWindowResize();
+
+
+    objectControls = new ObjectControls ( camera );
+
+    textCreator = new TextCreator( 50 );
+    
+    var slider = new Slider( 'Reflection Power' , G_UNIFORMS.reflectionPower , objectControls );
+    slider.scene.position.x = 500;
+    slider.scene.position.y = 150;
+
+
+    scene.add( slider.scene );
+
+    var slider = new Slider( 'Repulsion Power' ,  G_UNIFORMS.repulsionPower , objectControls );
+    slider.scene.position.x = 500;
+    slider.scene.position.y = 50;
+    scene.add( slider.scene );
+
+    var slider = new Slider( 'Repulsion Radius' ,  G_UNIFORMS.repulsionRadius , objectControls );
+    slider.scene.position.x = 500;
+    slider.scene.position.y = -50;
+    scene.add( slider.scene );
+    var slider = new Slider( 'Dampening' ,  G_UNIFORMS.dampening , objectControls );
+    slider.scene.position.x = 500;
+    slider.scene.position.y = -150;
+
+    scene.add( slider.scene );
+
+
+    var geo = new THREE.CubeGeometry( 30 , 30 , 30 );
+    var mat = new THREE.MeshNormalMaterial();
+    
+    iMesh = new THREE.Mesh( geo , mat );
+    cursorPosition = iMesh.position;
+    G_UNIFORMS.lightPos.value = cursorPosition;
+    iMesh.visible = false;
+    scene.add( iMesh );
+
+    var mat = new THREE.MeshNormalMaterial({
+     side: THREE.DoubleSide 
+    });
+
+    var geo = new THREE.PlaneBufferGeometry(100000 , 100000 , 1 , 1 );
+    iPlane = new THREE.Mesh( geo , mat );
+    scene.add( iPlane );
+    iPlane.position.z = -20
+    iPlane.visible = false;
+   // iPlane.lookAt( camera.position );
+
+    iPlane.hoveredUpdate = function( oc ){
+
+      iMesh.position.copy( oc.intersection.point );
+
+    }
+
+    objectControls.add( iPlane );
+
+
+   
+
+    // Making sure our renderer is always the right size
+    window.addEventListener( 'resize', onWindowResize , false );
+    window.addEventListener( 'mousemove', onMouseMove , false );
+   
+  
+
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+  
+  
+    var g = new THREE.IcosahedronGeometry( 20 , 3 );
+
+
+    for( var i =0; i< 50; i++ ){
+
+      var m = new THREE.ShaderMaterial({
+        uniforms:{
+          t_sem:  { type:"t" , value: matcap },
+          t_sem2:  { type:"t" , value: matcap2 },
+          lightPos:G_UNIFORMS.lightPos,
+          reflectionPower:G_UNIFORMS.reflectionPower,
+          velocity:{type:"v3",value: new THREE.Vector3() }
+        },
+        vertexShader:   shaders.vs.matcap,
+        fragmentShader: shaders.fs.matcap,
+      });
+
+
+
+      var mesh = new THREE.Mesh( g , m );
+
+      var t = Math.random() * 2 * Math.PI;
+      var p = Math.random() * 2 * Math.PI;
+
+      mesh.target   = new THREE.Vector3();//toCart( 12 , t , p );
+      mesh.velocity = mesh.material.uniforms.velocity.value;
+      mesh.power    = new THREE.Vector3(1 ,1,1);
+      mesh.position.x = (Math.random() - .5 ) * 1000;
+      mesh.position.y = (Math.random() - .5 ) * 200;
+      mesh.position.z = (Math.random() - .5 ) * 100;
+
+      mesh.velocity.x = (Math.random() - .5 ) * 4
+      mesh.velocity.y = (Math.random() - .5 ) * 4
+      mesh.velocity.z = (Math.random() - .5 ) * 4
+      //mesh.position.copy( mesh.target );
+      REPELERS.push( mesh );
+
+      scene.add( mesh );
+
+    }
+
+
+    lineGeo = new THREE.Geometry();
+
+    for( var i = 0; i < numOfRepelers; i++ ){
+
+      lineGeo.vertices.push( REPELERS[i].position );
+      lineGeo.vertices.push( cursorPosition );
+
+    }
+    var lineMat = new THREE.LineBasicMaterial();
+
+    lines = new THREE.Line( lineGeo , lineMat , THREE.LinePieces );
+
+    //scene.add( lines );
+    
+    
+    
+    
+    var t = new Text('SHINY', 3 );
+    t.scale.multiplyScalar( 80 );
+    t.scale.y *= 1.5; 
+    t.position.y = -80 * 2.1;
+    t.position.x = -120;
+    t.updateMatrix();
+    
+    /*gem = new CurlMesh('text' , t , {
+
+      soul:{
+
+        noiseSize: { type:"f" , value: .1 , constraints:[.01 , 1.] },
+        returnPower:        { type:"f" , value: .8  , constraints:[ .0 ,1. ] },
+        noisePower:         { type:"f" , value: 1   , constraints:[0 , 10.] },
+
+      }
+      
+    });*/
+
+     var g = new THREE.Mesh( new THREE.CubeGeometry( 3 , 3 , 3 , 20 , 20 , 20 ) );
+    //var g = new THREE.Mesh( new THREE.IcosahedronGeometry( 3 , 4 ) );
+    gem = new RepelerMesh( 'SHINY' , t , REPELERS , {
+      
+      vs: shaders.vertexShaders.sem,
+      fs: shaders.fragmentShaders.sem,
+  
+      soul:{
+        repulsionPower: G_UNIFORMS.repulsionPower,
+        repulsionRadius:G_UNIFORMS.repulsionRadius,
+        dampening:G_UNIFORMS.dampening,
+      },
+
+      body:{
+        t_sem:G_UNIFORMS.t_sem,
+        t_sem2:G_UNIFORMS.t_sem2,
+        lightPos:G_UNIFORMS.lightPos,
+        reflectionPower:G_UNIFORMS.reflectionPower
+      }
+
+    }); 
+
+    gem.soul.reset( gem.t_og.value );
+    gem.toggle();
+
+    //gem.body.material.blending = THREE.AdditiveBlending;
+    //gem.body.material.transparent = true;
+    //gem.body.material.depthWrite = false;
+
+    //gem.body.materialNeedsUpdate = true;
+
+    loader.liftCurtain();
+  
+  }
+
+
+  function animate(){
+
+
+
+    //audioController.update();
+
+    G_UNIFORMS.dT.value = clock.getDelta();
+    G_UNIFORMS.time.value += G_UNIFORMS.dT.value;
+
+    gem.update();
+
+    //gem1.update();
+
+   /* gem.soul.debugScene.position.copy( camera.position );
+
+    tv1.set( 0 , 0, -30 );
+    tv1.applyQuaternion( camera.quaternion );
+    gem.soul.debugScene.position.add( tv1 );
+    gem.soul.debugScene.lookAt( camera.position );*/
+
+
+    stats.update();
+
+    //controls.update();
+    objectControls.update();
+
+    camera.position.x -= (camera.position.x - cursorPosition.x) * .02;
+    camera.position.y -= (camera.position.y - cursorPosition.y) * .02;
+
+    camera.position.x *= .95;
+    camera.position.y *= .95;
+    camera.lookAt(scene.position);
+
+    var randAmount =(Math.sin( G_UNIFORMS.time.value * 10 )+1) * .4;
+    for( var  i = 0; i < REPELERS.length; i ++ ){
+
+      var r = REPELERS[i];
+
+      tv1.copy( cursorPosition );
+      tv1.sub( r.position );
+      tv1.normalize();
+      tv1.multiplyScalar( 1 );
+      r.velocity.add( tv1 );
+
+      tv1.set( 
+        Math.random() - .5,
+        Math.random() - .5,
+        Math.random() - .5
+      );
+      tv1.normalize();
+      tv1.multiplyScalar( randAmount );
+      r.velocity.add( tv1 );
+
+      
+      r.position.add( r.velocity );
+      r.velocity.multiplyScalar( .99 );
+    }
+
+    lineGeo.verticesNeedUpdate = true;
+ 
+    renderer.render( scene , camera );
+
+    requestAnimationFrame( animate );
+
+  }
+
+
+  function onMouseMove(e ){
+
+ 
+  }
+
+  // Resets the renderer to be the proper size
+  function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+   
+    var dpr = devicePixelRatio || 1;
+    renderer.setPixelRatio( dpr );
+
+    //camUniforms.SS.value.x = window.innerWidth * dpr;
+    //camUniforms.SS.value.y = window.innerHeight * dpr;
+
+
+  }
+
+
+  function onLoad(){
+
+
+    loaded ++;
+
+    console.log(loaded );
+    if( loaded === neededToLoad ){
+
+      init();
+      animate();
+      
+    }
+
+  }
+
+  function toCart( r , t , p ){
+
+    var x = r *(Math.sin(t))*(Math.cos(p));
+    var y = r *(Math.sin(t))*(Math.sin(p));
+    var z = r * (Math.cos(t));
+
+    return new THREE.Vector3(x,y,z);
+
+  }
+
+
+</script>
+
+
+</body>
+</html>
